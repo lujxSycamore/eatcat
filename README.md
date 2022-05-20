@@ -6,10 +6,10 @@
 技术栈
   bootstrap
   JavaScript
-  Vue
   HTML
   css
   jQuery
   i18n
-  viewpoint
+  viewport
 
+  live Server运行
