@@ -408,6 +408,7 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
         return false;
     }
 
+    /* 上方分数界面 */
     function createGameLayer() {
         let html = '<div id="GameLayerBG">';
         for (let i = 1; i <= 2; i++) {
@@ -423,6 +424,7 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
         }
         html += '</div>';
         html += '<div id="GameTimeLayer" class="text-center"></div>';
+
         return html;
     }
 
