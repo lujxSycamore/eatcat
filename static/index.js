@@ -315,8 +315,17 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
     let _ttreg = / t{1,2}(\d+)/,
         _clearttClsReg = / t{1,2}\d+| bad/;
 
+    var numberIndex = [0,0,0,0]
+    /* 游戏刷新 */
     function refreshGameLayer(box, loop, offset) {
+        /* 产生随机键型 */
         let i = Math.floor(Math.random() * 1000) % 4 + (loop ? 0 : 4);
+        numberIndex[i]++;
+        if(numberIndex[i]>5){
+            numberIndex[i] = 0
+            i = Math.floor(Math.random() * 1000) % 4 + (loop ? 0 : 4);
+        }
+        console.log(i)
         for (let j = 0; j < box.children.length; j++) {
             let r = box.children[j], rstyle = r.style;
             rstyle.left = (j % 4) * blockSize + 'px';
@@ -336,6 +345,7 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
                 r.notEmpty = false;
             }
         }
+        /* 每一次循环将所有按键下移 */
         if (loop) {
             box.style.webkitTransitionDuration = '0ms';
             box.style.display = 'none';
@@ -353,6 +363,7 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
         box.style[transitionDuration] = '150ms';
     }
 
+    /* 转移到下一行 */
     function gameLayerMoveNextRow() {
         for (let i = 0; i < GameLayer.length; i++) {
             let g = GameLayer[i];
@@ -500,9 +511,10 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
         }
 
         if (_gameScore <= 50) return I18N['text-level-1'];
-        if (_gameScore <= 120) return I18N['text-level-2'];
-        if (_gameScore <= 140)  return I18N['text-level-3'];
-        if (_gameScore <= 160) return I18N['text-level-4'];
+        if (_gameScore <= 100) return I18N['text-level-2'];
+        if (_gameScore <= 130)  return I18N['text-level-3'];
+        if (_gameScore <= 140) return I18N['text-level-4'];
+        if (_gameScore <= 160) return I18N['text-level-5'];
         return I18N['text-level-5'];
     }
 

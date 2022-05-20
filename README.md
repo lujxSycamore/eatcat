@@ -10,4 +10,6 @@
   HTML
   css
   jQuery
-  
+  i18n
+  viewpoint
+
