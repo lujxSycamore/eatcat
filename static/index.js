@@ -1,8 +1,10 @@
+/* 游戏模式 */
 const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
 
 (function(w) {
     const DEFAULT_I18N_RESOURCE = 'en';
 
+    /* i18n初始化,适配多语言环境 */
     function getJsonI18N() {
         let res;
         let lang = navigator.language.substring(0, 2);
@@ -26,7 +28,7 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
     }
 
     const I18N = getJsonI18N()
-
+    /* 遍历i8n 获取文本 */
     $('[data-i18n]').each(function() {
         const content = I18N[this.dataset.i18n];
         $(this).text(content);
@@ -40,11 +42,13 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
 
     let isDesktop = !navigator['userAgent'].match(/(ipad|iphone|ipod|android|windows phone)/i);
     let fontunit = isDesktop ? 20 : ((window.innerWidth > window.innerHeight ? window.innerHeight : window.innerWidth) / 320) * 10;
+    /* 根据设备添加class list */
     document.write('<style type="text/css">' +
         'html,body {font-size:' + (fontunit < 30 ? fontunit : '30') + 'px;}' +
         (isDesktop ? '#welcome,#GameTimeLayer,#GameLayerBG,#GameScoreLayer.SHADE{position: absolute;}' :
             '#welcome,#GameTimeLayer,#GameLayerBG,#GameScoreLayer.SHADE{position:fixed;}@media screen and (orientation:landscape) {#landscape {display: box; display: -webkit-box; display: -moz-box; display: -ms-flexbox;}}') +
         '</style>');
+    /* 默认键盘按键序列 */
     let map = {'d': 1, 'f': 2, 'j': 3, 'k': 4};
     if (isDesktop) {
         document.write('<div id="gameBody">');
@@ -55,16 +59,17 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
             }
         }
     }
-
+    /* 类数组 */
     let body, blockSize, GameLayer = [],
         GameLayerBG, touchArea = [],
         GameTimeLayer;
     let transform, transitionDuration, welcomeLayerClosed;
-
+    /* 当前的游戏模式 */
     let mode = getMode();
-
+    /* 当前的声音选项 */
     let soundMode = getSoundMode();
 
+    /* 页面初始化建立元素 */
     w.init = function() {
         showWelcomeLayer();
         body = document.getElementById('gameBody') || document.body;
@@ -72,12 +77,14 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
         transform = typeof (body.style.webkitTransform) != 'undefined' ? 'webkitTransform' : (typeof (body.style.msTransform) !=
         'undefined' ? 'msTransform' : 'transform');
         transitionDuration = transform.replace(/ransform/g, 'ransitionDuration');
+        /* 游戏主页面上方显示红色当前时间 */
         GameTimeLayer = document.getElementById('GameTimeLayer');
         GameLayer.push(document.getElementById('GameLayer1'));
         GameLayer[0].children = GameLayer[0].querySelectorAll('div');
         GameLayer.push(document.getElementById('GameLayer2'));
         GameLayer[1].children = GameLayer[1].querySelectorAll('div');
         GameLayerBG = document.getElementById('GameLayerBG');
+        /* 开始游戏计时 */
         if (GameLayerBG.ontouchstart === null) {
             GameLayerBG.ontouchstart = gameTapEvent;
         } else {
@@ -183,6 +190,7 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
 
     let _gameStartTime, _gameStartDatetime;
 
+    /* 获取默认声音地址 */
     function gameInit() {
         createjs.Sound.registerSound({
             src: "./static/music/err.mp3",
@@ -199,6 +207,7 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
         gameRestart();
     }
 
+    /* 重新开始游戏事件函数 */
     function gameRestart() {
         _gameBBList = [];
         _gameBBListIndex = 0;
@@ -213,6 +222,7 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
         updatePanel();
     }
 
+    /* 游戏刷新事件时间减少 */
     function gameStart() {
         _date1 = new Date();
         _gameStartDatetime = _date1.getTime();
@@ -221,6 +231,7 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
         _gameTime = setInterval(timer, 1000);
     }
 
+    /* 计算cps */
     function getCPS() {
         let cps = _gameScore / ((new Date().getTime() - _gameStartDatetime) / 1000);
         if (isNaN(cps) || cps === Infinity || _gameStartTime < 2) {
@@ -229,9 +240,11 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
         return cps;
     }
 
+    /* 时间计时器 */
     function timer() {
         _gameTimeNum--;
         _gameStartTime++;
+        /* 如果为普通模式,时间计时器正常计数 */
         if (mode === MODE_NORMAL && _gameTimeNum <= 0) {
             GameTimeLayer.innerHTML = I18N['time-up'] + '!';
             gameOver();
@@ -243,11 +256,14 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
         updatePanel();
     }
 
+
     function updatePanel() {
         if (mode === MODE_NORMAL) {
+            /* 普通模式 */
             if (!_gameOver) {
                 GameTimeLayer.innerHTML = createTimeText(_gameTimeNum);
             }
+            /* 无尽模式 */
         } else if (mode === MODE_ENDLESS) {
             let cps = getCPS();
             let text = (cps === 0 ? I18N['calculating'] : cps.toFixed(2));
@@ -257,11 +273,12 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
         }
     }
     
-    //使重试按钮获得焦点
+    /* 使重来按钮获得焦点，便于重开 */
     function foucusOnReplay(){
         $('#replay').focus()
     }
 
+    /* 游戏结算界面 */
     function gameOver() {
         _gameOver = true;
         clearInterval(_gameTime);
@@ -273,8 +290,15 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
             foucusOnReplay();
         }, 1500);
     }
-
-
+/* 
+Todo: 
+______________________________
+    1.显示系统信息
+    2.提交值服务器
+    3.链接数据库
+    4.验证成绩合法性
+    5.上传 */
+    
     function SubmitResults() {
         let system = "其他操作系统";
         let area = "异世界";
@@ -319,11 +343,11 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
     /* 游戏刷新 */
     function refreshGameLayer(box, loop, offset) {
         /* 产生随机键型 */
-        let i = Math.floor(Math.random() * 1000) % 4 + (loop ? 0 : 4);
-        numberIndex[i]++;
+        let i = Math.floor(Math.random() * 1000) % 4 ;
+        numberIndex[i] = numberIndex[i]+1;
         if(numberIndex[i]>5){
-            numberIndex[i] = 0
-            i = Math.floor(Math.random() * 1000) % 4 + (loop ? 0 : 4);
+            numberIndex[i] = 0;
+            i = Math.floor(Math.random() * 1000) % 4 ;
         }
         console.log(i)
         for (let j = 0; j < box.children.length; j++) {
@@ -345,7 +369,7 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
                 r.notEmpty = false;
             }
         }
-        /* 每一次循环将所有按键下移 */
+        /* 铺面下移 预览 */
         if (loop) {
             box.style.webkitTransitionDuration = '0ms';
             box.style.display = 'none';
@@ -375,18 +399,21 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
             }
         }
     }
-
+    /* 点击事件 */
     function gameTapEvent(e) {
         if (_gameOver) {
             return false;
         }
+        /* 点击目标 */
         let tar = e.target;
+        /* 点击坐标 */
         let y = e.clientY || e.targetTouches[0].clientY,
             x = (e.clientX || e.targetTouches[0].clientX) - body.offsetLeft,
             p = _gameBBList[_gameBBListIndex];
         if (y > touchArea[0] || y < touchArea[1]) {
             return false;
         }
+        /* 正确点击 */
         if ((p.id === tar.id && tar.notEmpty) || (p.cell === 0 && x < blockSize) || (p.cell === 1 && x > blockSize && x < 2 *
             blockSize) || (p.cell === 2 && x > 2 * blockSize && x < 3 * blockSize) || (p.cell === 3 && x > 3 * blockSize)) {
             if (!_gameStart) {
@@ -403,7 +430,9 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
             updatePanel();
 
             gameLayerMoveNextRow();
-        } else if (_gameStart && !tar.notEmpty) {
+        } 
+        /* 错误点击 */
+        else if (_gameStart && !tar.notEmpty) {
             if (soundMode === 'on') {
                 createjs.Sound.play("err");
             }
@@ -439,12 +468,14 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
         return html;
     }
 
+    /* 关闭初始界面 */
     function closeWelcomeLayer() {
         welcomeLayerClosed = true;
         $('#welcome').css('display', 'none');
         updatePanel();
     }
 
+    /* 展示初始界面 */
     function showWelcomeLayer() {
         welcomeLayerClosed = false;
         $('#mode').text(modeToString(mode));
@@ -459,14 +490,17 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
         return best;
     }
 
+    /* 游戏分数转换字符串 */
     function scoreToString(score) {
         return mode === MODE_ENDLESS ? score.toFixed(2) : score.toString();
     }
 
+    /* 验证当前时间是否合法 */
     function legalDeviationTime() {
         return deviationTime < (_gameSettingNum + 3) * 1000;
     }
 
+    /* 展示游戏结算分数界面 */
     function showGameScoreLayer(cps) {
         let l = $('#GameScoreLayer');
         let c = $(`#${_gameBBList[_gameBBListIndex - 1].id}`).attr('class').match(_ttreg)[1];
@@ -485,22 +519,26 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
         l.css('display', 'block');
     }
 
+    /* 隐藏分数结算界面 */
     function hideGameScoreLayer() {
         $('#GameScoreLayer').css('display', 'none');
     }
 
+    /* 重开 */
     w.replayBtn = function() {
         gameRestart();
         hideGameScoreLayer();
     }
 
+    /* 回到主界面 */
     w.backBtn = function() {
         gameRestart();
         hideGameScoreLayer();
         showWelcomeLayer();
     }
 
-    function shareText(cps) { //展示界面
+    /* 分数结算界面 */
+    function shareText(cps) { 
         if (mode === MODE_NORMAL) {
             let date2 = new Date();
             deviationTime = (date2.getTime() - _date1.getTime())
@@ -509,7 +547,7 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
             }
             SubmitResults();
         }
-
+        /* 根据游戏分数显示评语 */
         if (_gameScore <= 50) return I18N['text-level-1'];
         if (_gameScore <= 100) return I18N['text-level-2'];
         if (_gameScore <= 130)  return I18N['text-level-3'];
@@ -518,6 +556,7 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
         return I18N['text-level-5'];
     }
 
+    /* 格式化处理json文件 */
     function toStr(obj) {
         if (typeof obj === 'object') {
             return JSON.stringify(obj);
@@ -526,6 +565,7 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
         }
     }
 
+    /* 格式化cookie并存储 */
     function cookie(name, value, time) {
         if (name) {
             if (value) {
@@ -537,6 +577,7 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
                     "; domain=" + arguments[3] + (arguments[4] ? "; path=" + arguments[4] + (arguments[5] ? "; secure" : "") : "") :
                     "") : ""), !0;
             }
+            /* 验证时间格式是否正确 */
             return value = document.cookie.match("(?:^|;)\\s*" + name.replace(/([-.*+?^${}()|[\]\/\\])/g, "\\$1") + "=([^;]*)"),
                 value = value && "string" == typeof value[1] ? unescape(value[1]) : !1, (/^(\{|\[).+\}|\]$/.test(value) ||
                 /^[0-9]+$/g.test(value)) && eval("value=" + value), value;
@@ -549,9 +590,8 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
 
     document.write(createGameLayer());
 
+    /* 项目开启时初始化读取cookie信息 */
     function initSetting() {
-        $("#username").val(cookie("username") ? cookie("username") : "");
-        $("#message").val(cookie("message") ? cookie("message") : "");
         if (cookie("title")) {
             $('title').text(cookie('title'));
             $('#title').val(cookie('title'));
@@ -584,6 +624,7 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
         $('#sound').text(soundMode === 'on' ? I18N['sound-on'] : I18N['sound-off']);
     }
 
+    /* 保存cookie */
     w.save_cookie = function() {
         const settings = ['username', 'message', 'keyboard', 'title', 'gameTime'];
         for (let s of settings) {
@@ -595,20 +636,7 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
         initSetting();
     }
 
-    function isnull(val) {
-        let str = val.replace(/(^\s*)|(\s*$)/g, '');
-        return str === '' || str === undefined || str == null;
-    }
-
-    w.goRank = function() {
-        let name = $("#username").val();
-        let link = './rank.php';
-        if (!isnull(name)) {
-            link += "?name=" + name;
-        }
-        window.location.href = link;
-    }
-
+    /* pc端口键盘模拟点击事件 */
     function click(index) {
         if (!welcomeLayerClosed) {
             return;
@@ -618,10 +646,10 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
         let base = parseInt($(`#${p.id}`).attr("num")) - p.cell;
         let num = base + index - 1;
         let id = p.id.substring(0, 11) + num;
-
+        
         let fakeEvent = {
             clientX: ((index - 1) * blockSize + index * blockSize) / 2 + body.offsetLeft,
-            // Make sure that it is in the area
+            /* 保证在正确的区域之内 */
             clientY: (touchArea[0] + touchArea[1]) / 2,
             target: document.getElementById(id),
         };
@@ -629,11 +657,13 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
         gameTapEvent(fakeEvent);
     }
 
+    /* 渲染到dom树 */
     const clickBeforeStyle = $('<style></style>');
     const clickAfterStyle = $('<style></style>');
     clickBeforeStyle.appendTo($(document.head));
     clickAfterStyle.appendTo($(document.head));
 
+    /* 显示文件列表 */
     function saveImage(dom, callback) {
         if (dom.files && dom.files[0]) {
             let reader = new FileReader();
@@ -644,11 +674,12 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
         }
     }
 
-
+    /* 获取点击之后的图 */
     w.getClickBeforeImage = function() {
         $('#click-before-image').click();
     }
 
+    /* 保存点击之前的图 */
     w.saveClickBeforeImage = function() {
         const img = document.getElementById('click-before-image');
         saveImage(img, r => {
@@ -660,10 +691,12 @@ const MODE_NORMAL = 1, MODE_ENDLESS = 2, MODE_PRACTICE = 3;
         })
     }
 
+    /* 获取点击之后的图 */
     w.getClickAfterImage = function() {
         $('#click-after-image').click();
     }
 
+    /* 保存点击之后的图 */
     w.saveClickAfterImage = function() {
         const img = document.getElementById('click-after-image');
         saveImage(img, r => {
